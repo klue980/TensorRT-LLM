@@ -16,7 +16,7 @@ TensorRT-LLM-Gemma
 ---
 <div align="left">
 
-## Installation
+## Manual
 Engineer : Kim, SeongHo
 Company  : Yonsei University
 Role     : Undergraduate
