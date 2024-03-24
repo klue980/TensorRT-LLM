@@ -1,6 +1,6 @@
 <div align="center">
 
-TensorRT-LLM
+TensorRT-LLM-Gemma
 ===========================
 <h4> A TensorRT Toolbox for Optimized Large Language Model Inference</h4>
 
@@ -15,6 +15,122 @@ TensorRT-LLM
 
 ---
 <div align="left">
+
+## Installation
+Engineer  : Kim, SeongHo
+Company   : Yonsei University
+Roel      : Undergraduate
+
+Create Date  : 2024.03.24
+Last Updated : 2024.03.24
+
+CUDA version : 12.1.0
+TensorRT-LLM : 2024031900
+Jax          : 0.4.25
+
+please run the following commands to install TensorRT-LLM for x86_64 users.
+
+```bash
+# Obtain and start the basic docker image environment.
+ docker run --gpus device=0 -it --privileged --ipc host --name CONTAINER_NAME -v /workspace nvidia/cuda:12.1.0-devel-ubuntu22.04
+
+# Install dependencies, TensorRT-LLM requires Python 3.10
+apt-get update && apt-get -y install python3.10 python3-pip openmpi-bin libopenmpi-dev git git-lfs wget
+
+# Install the latest preview version (corresponding to the main branch) of TensorRT-LLM.
+# If you want to install the stable version (corresponding to the release branch), please
+# remove the `--pre` option.
+git lfs install && git lfs clone https://github.com/klue980/TensorRT-LLM.git && pip3 install tensorrt_llm -U --pre --extra-index-url https://pypi.nvidia.com && cd TensorRT-LLM/examples/gemma && pip3 install -r requirements.txt
+
+# Check installation
+python3 -c "import torch; print(torch.__version__)"
+python3 -c "import tensorrt_llm; print(tensorrt_llm.__version__)"
+python3 -c "import mpmath; print(mpmath.__version__)"
+python3 -c "import jax; print(jax.__version__)"
+
+# original requirements.txt
+-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+--extra-index-url https://pypi.nvidia.com
+tensorrt_llm==0.9.0.dev2024031900
+flax~=0.8.0
+jax[cuda12_pip]~=0.4.19; platform_system != "Windows"
+jax~=0.4.19; platform_system == "Windows"
+safetensors~=0.4.1
+sentencepiece~=0.1.99
+h5py~=3.10.0
+easydict~=1.11
+rouge_score
+nltk
+
+# modified requirements.txt (use if doesn't work)
+# mpmath 1.4.0a does not work with the current version of tensorrt_llm
+-f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+--extra-index-url https://pypi.nvidia.com
+tensorrt_llm==0.9.0.dev2024031900
+flax~=0.8.0
+jax
+safetensors~=0.4.1
+sentencepiece~=0.1.99
+h5py~=3.10.0
+easydict~=1.11
+rouge_score
+nltk
+mpmath==1.3.0
+kagglehub
+
+# script
+mkdir = f"""
+mkdir -p ./check/hf/2b-it/fp16 && \
+    mkdir -p ./trt-engine/hf/2b-it/fp16 && \
+    mkdir -p ./trt-engine/hf/2b-it-context-disable/fp16 && \
+    mkdir -p ./NSYS && \
+    mkdir -p ./NCU
+"""
+
+# under SM80, bf is not working
+part_hf_convert = f"""
+python3 ./convert_checkpoint.py \
+    --ckpt-type hf \
+    --model-dir ./gemma-2b-it \
+    --dtype float16 \
+    --world-size 1 \
+    --output-model-dir ./check/hf/2b-it/fp16
+"""
+
+part_build = f"""
+trtllm-build --checkpoint_dir ./check/hf/2b-it/fp16 \
+             --gemm_plugin float16 \
+             --gpt_attention_plugin float16 \
+             --max_batch_size 1 \
+             --max_input_len 384 \
+             --max_output_len 2 \
+             --context_fmha enable \
+             --output_dir ./trt-engine/hf/2b-it/fp16
+"""
+
+part_unbuild = f"""
+trtllm-build --checkpoint_dir ./check/hf/2b-it/fp16 \
+             --gemm_plugin float16 \
+             --gpt_attention_plugin float16 \
+             --max_batch_size 1 \
+             --max_input_len 384 \
+             --max_output_len 2 \
+             --context_fmha disable \
+             --output_dir ./trt-engine/hf/2b-it-context-disable/fp16
+"""
+
+part_summarize = f"""
+nsys profile --wait all -t cuda,nvtx,cudnn,cublas -f true --stats true -w true -o ./NSYS/gemmaite1ba1in384o2.nsys-rep \
+                        python3 ../summarize.py --test_trt_llm \
+                        --hf_model_dir ./gemma-2b-it \
+                        --data_type fp16 \
+                        --engine_dir ./trt-engine/hf/2b-it/fp16 \
+                        --batch_size 1 \
+                        --max_input_length 384 \
+                        --output_len 2 \
+                        --max_ite 1
+"""
+```
 
 ## Latest News
 * [2024/02/06] [🚀 Speed up inference with SOTA quantization techniques in TRT-LLM](./docs/source/blogs/quantization-in-TRT-LLM.md)
