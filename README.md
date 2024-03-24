@@ -18,14 +18,21 @@ TensorRT-LLM-Gemma
 
 ## Installation
 Engineer  : Kim, SeongHo
+
 Company   : Yonsei University
+
 Roel      : Undergraduate
 
+
 Create Date  : 2024.03.24
+
 Last Updated : 2024.03.24
 
+
 CUDA version : 12.1.0
+
 TensorRT-LLM : 2024031900
+
 Jax          : 0.4.25
 
 please run the following commands to install TensorRT-LLM for x86_64 users.
