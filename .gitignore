@@ -36,3 +36,5 @@ tensorrt_llm/bindings/*.pyi
 # Testing
 .coverage.*
 results_trt/
+examples/gemma/gemma-2b-it
+examples/gemma/check/hf/2b-it/fp16/rank0.safetensors

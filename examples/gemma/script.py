@@ -38,7 +38,9 @@ $ python3 -c "import jax; print(jax.__version__)"
 part_hf_convert = f"""
 mkdir -p ./check/hf/2b-it/fp16 && \
     mkdir -p ./trt-engine/hf/2b-it/fp16 && \
-    mkdir -p ./trt-engine/hf/2b-it-context-disable/fp16
+    mkdir -p ./trt-engine/hf/2b-it-context-disable/fp16 && \
+    mkdir -p ./NSYS && \
+    mkdir -p ./NCU
 """
 
 
